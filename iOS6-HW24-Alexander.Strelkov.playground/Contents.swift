@@ -1,6 +1,17 @@
 import UIKit
 
-let myUrl = "https://api.magicthegathering.io/v1/cards"
+let urlProtocol = "https"
+let urlHost = "api.magicthegathering.io"
+let urlPath = "/v1/cards"
+let queryItems = [URLQueryItem(name: "name", value: "Black Lotus|Opt")]
+
+var urlComponents = URLComponents()
+urlComponents.scheme = urlProtocol
+urlComponents.host = urlHost
+urlComponents.path = urlPath
+urlComponents.queryItems = queryItems
+
+let magicCardsURL = urlComponents.url?.absoluteString ?? ""
 
 func getData(urlRequest: String) {
     
@@ -25,20 +36,28 @@ func parseJSON(magicData: Data) {
     let decoder = JSONDecoder()
     do {
         let decodedData = try decoder.decode(MagicData.self, from: magicData)
-        print("""
-Card name: \(decodedData.cards[0].name)
-Mana cost: \(decodedData.cards[0].manaCost ?? "")
-Type: \(decodedData.cards[0].type)
-Power: \(decodedData.cards[0].power ?? "")
-Rarity level: \(decodedData.cards[0].rarity)
-""")
+        decodedData.cards.filter { $0.name == "Black Lotus" || $0.name == "Opt" }
+        
+        for cards in decodedData.cards {
+            if cards.setName == "Unlimited Edition" || cards.setName == "Ixalan" {
+                print("""
+        _________________________
+        Card name: \(cards.name)
+        Mana cost: \(cards.manaCost ?? "no information:(")
+        Type: \(cards.type)
+        Power: \(cards.power ?? "no information:(")
+        Rarity level: \(cards.rarity)
+        Set name: \(cards.setName)
+        """)
+            }
+        }
     } catch {
         print("Failed to decode JSON: \(error)")
     }
 }
 
 struct MagicData: Decodable {
-    let cards: [Cards]
+    var cards: [Cards]
 }
 
 struct Cards: Decodable {
@@ -47,6 +66,7 @@ struct Cards: Decodable {
     let type: String
     let power: String?
     let rarity: String
+    let setName: String
 }
 
-getData(urlRequest: myUrl)
+getData(urlRequest: magicCardsURL)
